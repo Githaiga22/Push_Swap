@@ -3,81 +3,68 @@ package push
 import "fmt"
 
 func PushMinimum(input []int) []string {
-	var res []string
+	var operations []string
 	arr := append([]int{}, input...)
-	var arr2 []int
-	max := 0
-	j := 0
-	hld := 0
+	var tempStack []int
+	var maxVal, maxIndex, lastMax int
 
 	for !IsSorted(arr) {
-
 		if arr[0] > arr[1] {
-			arr[1], arr[0] = arr[0], arr[1]
-			res = append(res, "sa")
+			arr[0], arr[1] = arr[1], arr[0]
+			operations = append(operations, "sa")
 			continue
 		}
 
-		for i := 0; i < len(arr); i++ {
-			if arr[i] > max && arr[i] != hld {
-				max = arr[i]
-				j = i
+		for i, val := range arr {
+			if val > maxVal && val != lastMax {
+				maxVal = val
+				maxIndex = i
 			}
 		}
 
-		if j == len(arr)-1 {
-			j = 0
-			hld = max
-			max = 0
+		if maxIndex == len(arr)-1 {
+			lastMax = maxVal
+			maxVal = 0
 			continue
 		}
 
-		for i := 0; i <= j-1; i++ {
-			fmt.Println(arr[i])
-			if i < len(arr)-1 {
-				res = append(res, "pb")
-				arr2, res = SortArr2(arr[i], arr2, res)
+		for i := 0; i < maxIndex; i++ {
+			if i < len(arr) {
+				operations = append(operations, "pb")
+				tempStack, operations = SortTempStack(arr[i], tempStack, operations)
 			}
 		}
-
-		for i := 0; i <= j - 1; i++ {
-			if i < len(arr)-1 {
-				arr = PushToB(arr)
-			}
-		}
-
+		arr = arr[maxIndex:]
 	}
-	for _, v := range arr2 {
-		arr = append([]int{v}, arr...)
-		res = append(res, "pa")
+
+	for _, val := range tempStack {
+		arr = append([]int{val}, arr...)
+		operations = append(operations, "pa")
 	}
-	fmt.Println(res)
+
+	fmt.Println(operations)
 	fmt.Println(arr)
-	fmt.Println(arr2)
-	return res
+	fmt.Println(tempStack)
+
+	return operations
 }
 
-func SortArr2(num int, arr2 []int, res []string) ([]int, []string) {
-	if arr2 == nil {
-		arr2 = append(arr2, num)
-		return arr2, res
+func SortTempStack(num int, tempStack []int, operations []string) ([]int, []string) {
+	if len(tempStack) == 0 {
+		tempStack = append(tempStack, num)
+		return tempStack, operations
 	}
-	if num > arr2[0] {
-		arr2 = append([]int{num}, arr2...)
-	} else if num < arr2[len(arr2)-1] {
-		arr2 = append(arr2, num)
-		res = append(res, "rb")
-	} else if num < arr2[0] && num > arr2[len(arr2)-1] {
-		arr2 = append(arr2, num)
-		arr2[0], arr2[1] = arr2[1], arr2[0]
-	}
-	return arr2, res
-}
 
-func PushToB(arr []int) (res []int) {
-	for i := 1; i < len(arr); i++ {
-		res = append(res, arr[i])
+	if num > tempStack[0] {
+		tempStack = append([]int{num}, tempStack...)
+	} else if num < tempStack[len(tempStack)-1] {
+		tempStack = append(tempStack, num)
+		operations = append(operations, "rb")
+	} else {
+		tempStack = append(tempStack, num)
+		tempStack[len(tempStack)-2], tempStack[len(tempStack)-1] = tempStack[len(tempStack)-1], tempStack[len(tempStack)-2]
+		operations = append(operations, "sb")
 	}
-	fmt.Println(res)
-	return res
+
+	return tempStack, operations
 }
